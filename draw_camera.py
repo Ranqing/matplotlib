@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.axes as axes
 
 
-def load_camera_pose(file_name='camera_pose_y.txt'):
+def load_camera_pose(file_name='camera_pose.txt'):
     with open(file_name) as input_file:
         raw_data = input_file.read()
         numbers = [float(x) for x in raw_data.strip().split()]
@@ -13,9 +13,10 @@ def load_camera_pose(file_name='camera_pose_y.txt'):
 
 
 class camera:
-    camera_depth = 0.05
-    camera_width = 0.04
-    camera_height = 0.04
+    camera_depth = 0.07
+    camera_width = 0.05
+    camera_height = 0.05
+    axis_length = 0.1
 
     def __init__(self, pos, direction=None, target=None):
         self.pos = pos
@@ -35,10 +36,22 @@ class camera:
         y = np.array((0, 1, 0))
         horizontal_direction = np.cross(self.direction, y)
         horizontal_direction /= np.linalg.norm(horizontal_direction)
-        horizontal_direction *= self.camera_width / 2
+        
         vertical_direction = np.cross(self.direction, horizontal_direction)
         vertical_direction /= np.linalg.norm(vertical_direction)
+
+        another_direction = np.cross(vertical_direction, horizontal_direction)
+        another_direction /= np.linalg.norm(another_direction)
+        axis_points = [self.pos, self.pos - horizontal_direction * self.axis_length / 2]
+        ax.plot(*zip(*axis_points), color = 'r')
+        axis_points = [self.pos, self.pos - vertical_direction * self.axis_length / 2]
+        ax.plot(*zip(*axis_points), color = 'g')
+        axis_points = [self.pos, self.pos - another_direction * self.axis_length * 1.5]
+        ax.plot(*zip(*axis_points), color = 'b')
+
+
         vertical_direction *= self.camera_height / 2
+        horizontal_direction *= self.camera_width / 2
         p1 = centre + horizontal_direction + vertical_direction
         p2 = centre + horizontal_direction - vertical_direction
         p3 = centre - horizontal_direction - vertical_direction
@@ -48,12 +61,14 @@ class camera:
 
         # draw bottom
         temp = bottom_points + bottom_points[0:1]
-        ax.plot(*zip(*temp))
+        ax.plot(*zip(*temp), color = (1,1,1,1), linewidth=3)
 
         # draw edge
         for p in bottom_points:
             temp = [self.pos, p]
-            ax.plot(*zip(*temp))
+            ax.plot(*zip(*temp), color =  (1,1,1,1), linewidth=3)
+
+
 
 
 raw_camera = load_camera_pose()
@@ -80,7 +95,8 @@ ori = (-1.5, 0, -2)                 #need to be adjusted
 for pp, c in zip(p,colors):
     temp = [tuple(ppp + o for ppp, o in zip(pp, ori)), ori]
     ax.plot(*zip(*temp), color = c )
-ax.axis('off')
+#ax.axis('off')
+# ax.set_axis_bgcolor((0.5, 0.5, 0.5))
 ax.set_axis_bgcolor((0.5, 0.5, 0.5))
 show_range = tuple([xyz - 1, xyz + 1] for xyz in centre)
 ax.set_xlim(show_range[0])
